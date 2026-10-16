@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+import Gallery from '../components/Gallery.astro';
+import { gallery, closing, site } from '../content/site';
+import { allWorks } from '../content/works';
+import { withBase } from '../lib/url';
+
+const works = allWorks();
+---
+
+<Base title={`${gallery.title} | ${site.name}`} description={gallery.intro}>
+  <header class="gh">
+    <div class="container">
+      <p class="eyebrow">{gallery.eyebrow}</p>
+      <h1>{gallery.title}</h1>
+      <p class="lede gh__intro">{gallery.intro}</p>
+      <p class="gh__count">{works.length} צילומים</p>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class="container">
+      <Gallery works={works} label={gallery.title} />
+    </div>
+  </section>
+
+  <section class="section section--champagne section--tight closing">
+    <div class="container--narrow reveal closing__inner">
+      <h2>{closing.title}</h2>
+      <p class="lede">{closing.text}</p>
+      <a class="btn btn--solid" href={withBase(closing.cta.href)}><span>{closing.cta.label}</span></a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .gh { padding-block: clamp(3rem, 8vw, 6rem) clamp(2rem, 4vw, 3.5rem); }
+  .gh__intro { margin-top: 1.25rem; }
+  .gh__count { margin-top: 1.75rem; font-size: var(--s--1); letter-spacing: 0.22em; color: var(--gold-ink); font-variant-numeric: tabular-nums; }
+  .closing { text-align: center; }
+  .closing__inner { display: grid; justify-items: center; gap: 1.4rem; }
+  .closing .lede { margin-inline: auto; }
+</style>

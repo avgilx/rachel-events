@@ -1,0 +1,120 @@
+---
+import '@fontsource/bellefair/hebrew-400.css';
+import '@fontsource-variable/assistant';
+import '../styles/global.css';
+
+import bellefair from '@fontsource/bellefair/files/bellefair-hebrew-400-normal.woff2?url';
+import assistant from '@fontsource-variable/assistant/files/assistant-hebrew-wght-normal.woff2?url';
+
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { site, contact } from '../content/site';
+import { withBase } from '../lib/url';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  /** כותרת שקופה מעל אזור פתיחה כהה */
+  overHero?: boolean;
+}
+
+const {
+  title = site.seoTitle,
+  description = site.seoDescription,
+  ogImage = '/og-default.jpg',
+  overHero = false,
+} = Astro.props;
+
+const canonical = Astro.site
+  ? new URL(Astro.url.pathname.replace(/\/$/, '') || '/', Astro.site).href
+  : undefined;
+const ogPath = withBase(ogImage);
+const ogImageUrl = Astro.site ? new URL(ogPath, Astro.site).href : ogPath;
+const homeUrl = Astro.site ? new URL(withBase('/'), Astro.site).href : undefined;
+
+// נתוני structured data — רק פרטים אמיתיים שנמסרו.
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: site.name,
+  description: site.seoDescription,
+  areaServed: [
+    { '@type': 'City', name: 'ראשון לציון' },
+    { '@type': 'AdministrativeArea', name: 'מחוז המרכז' },
+    { '@type': 'AdministrativeArea', name: 'השפלה' },
+  ],
+  image: ogImageUrl,
+  // מקור אמת יחיד — אותו מספר כמו בעמוד יצירת הקשר, לא יכול לסטות
+  ...(contact.channels.whatsapp
+    ? { telephone: `+${contact.channels.whatsapp.replace(/\D/g, '')}` }
+    : {}),
+  ...(homeUrl ? { url: homeUrl } : {}),
+};
+---
+
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {site.noindex && <meta name="robots" content="noindex, nofollow" />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
+    <meta name="theme-color" content="#1b1512" />
+
+    <link rel="preload" as="font" type="font/woff2" href={bellefair} crossorigin="anonymous" />
+    <link rel="preload" as="font" type="font/woff2" href={assistant} crossorigin="anonymous" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content={site.locale} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(ld)} is:inline />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">דילוג לתוכן הראשי</a>
+    <Header overHero={overHero} />
+    <main id="main"><slot /></main>
+    <Footer />
+
+    <script>
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const items = document.querySelectorAll<HTMLElement>('.reveal, .reveal-img');
+
+      if (reduce || !('IntersectionObserver' in window)) {
+        items.forEach((el) => el.classList.add('is-visible'));
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                e.target.classList.add('is-visible');
+                io.unobserve(e.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -10% 0px', threshold: 0.08 },
+        );
+        items.forEach((el) => io.observe(el));
+        // אם משהו משתבש — אחרי 3 שניות הכול נחשף בכל מקרה.
+        // בלי זה, באג אחד בהסתרה מרוקן עמוד שלם.
+        window.setTimeout(() => items.forEach((el) => el.classList.add('is-visible')), 3000);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+---
+import { footer, nav, contact } from '../content/site';
+import { withBase } from '../lib/url';
+
+const year = new Date().getFullYear();
+const social = [
+  contact.channels.instagram && { label: 'Instagram', href: contact.channels.instagram },
+  contact.channels.facebook && { label: 'Facebook', href: contact.channels.facebook },
+].filter(Boolean) as { label: string; href: string }[];
+---
+
+<footer class="ftr">
+  <div class="container ftr__inner">
+    <div class="ftr__id">
+      <p class="ftr__name">{footer.name}</p>
+      <p class="ftr__tag">{footer.tagline}</p>
+    </div>
+
+    <nav class="ftr__nav" aria-label="ניווט תחתון">
+      <ul>
+        {nav.map((i) => <li><a href={withBase(i.href)}>{i.label}</a></li>)}
+        <li><a href={footer.artSite.href} rel="noopener">{footer.artSite.label}</a></li>
+      </ul>
+    </nav>
+
+    {social.length > 0 && (
+      <ul class="ftr__social">
+        {social.map((s) => <li><a href={s.href} target="_blank" rel="me noopener">{s.label}</a></li>)}
+      </ul>
+    )}
+
+    <p class="ftr__legal"><small>© {year} {footer.name}. כל הזכויות שמורות.</small></p>
+  </div>
+</footer>
+
+<style>
+  .ftr { background: var(--espresso); color: var(--on-dark); padding-block: clamp(3.5rem, 7vw, 6rem); }
+  .ftr__inner { display: grid; gap: 2.25rem; }
+  .ftr__name { font-family: 'Bellefair', Georgia, serif; font-size: var(--s-2); line-height: 1.2; }
+  .ftr__tag { margin-top: 0.5rem; font-size: var(--s--1); letter-spacing: 0.22em; color: var(--on-dark-soft); }
+  .ftr__nav ul, .ftr__social { display: flex; flex-wrap: wrap; gap: 0.6rem 2rem; list-style: none; margin: 0; padding: 0; }
+  .ftr__nav a, .ftr__social a { text-decoration: none; font-size: var(--s--1); letter-spacing: 0.1em; color: var(--on-dark-soft); }
+  .ftr__nav a:hover, .ftr__social a:hover { color: var(--gold-bright); }
+  .ftr__legal { padding-top: 1.75rem; border-top: 1px solid var(--line-on-dark); color: var(--on-dark-soft); font-size: 0.78rem; letter-spacing: 0.04em; }
+
+  @media (min-width: 880px) {
+    .ftr__inner { grid-template-columns: 1fr auto; align-items: start; column-gap: 4rem; }
+    .ftr__id { grid-row: span 2; }
+    .ftr__legal { grid-column: 1 / -1; }
+  }
+</style>

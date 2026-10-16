@@ -1,0 +1,104 @@
+---
+import { Image, getImage } from 'astro:assets';
+import type { Work } from '../content/works';
+import { getAsset } from '../lib/images';
+import Lightbox from './Lightbox.astro';
+
+interface Props { works: Work[]; label: string }
+const { works, label } = Astro.props;
+
+const items = await Promise.all(
+  works.map(async (work) => {
+    const src = getAsset(work.image);
+    // סט רספונסיבי ל-lightbox — קודם נשלחה תמונה אחת של עד 446KB בכל הקשה
+    const sizes = [800, 1200, 1600];
+    const variants = await Promise.all(
+      sizes.map((w) => getImage({ src, width: w, format: 'webp', quality: 84 })),
+    );
+    const full = variants[variants.length - 1];
+    const srcset = variants.map((v, i) => `${v.src} ${sizes[i]}w`).join(', ');
+    return { work, src, full, srcset, caption: work.alt };
+  }),
+);
+---
+
+<div class="gal" data-gallery aria-label={label} role="group">
+  {items.map((item, i) => (
+    <button
+      type="button"
+      class="tile"
+      id={item.work.id}
+      data-index={i}
+      data-full={item.full.src}
+      data-srcset={item.srcset}
+      data-width={item.full.attributes.width ?? item.src.width}
+      data-height={item.full.attributes.height ?? item.src.height}
+      data-alt={item.work.alt}
+      data-caption={item.caption}
+      data-title={item.work.title ?? ''}
+      data-details={JSON.stringify([])}
+    >
+      <span class="tile__frame reveal-img" style={`--reveal-delay:${(i % 3) * 110}ms`}>
+        <Image
+          src={item.src}
+          alt={item.work.alt}
+          widths={[460, 700, 1000]}
+          sizes="(min-width: 1100px) 32vw, (min-width: 680px) 47vw, 90vw"
+          loading={i < 3 ? 'eager' : 'lazy'}
+          decoding="async"
+          quality={80}
+        />
+        <span class="tile__veil" aria-hidden="true"></span>
+      </span>
+      <span class="visually-hidden">הגדלת התמונה</span>
+    </button>
+  ))}
+</div>
+
+<Lightbox />
+
+<style>
+  .gal { column-count: 1; column-gap: clamp(1rem, 2.4vw, 2rem); }
+  @media (min-width: 680px) { .gal { column-count: 2; } }
+  @media (min-width: 1100px) { .gal { column-count: 3; } }
+
+  .tile {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0 0 clamp(1rem, 2.4vw, 2rem);
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+  }
+
+  .tile__frame {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    background: var(--sand);
+  }
+
+  .tile :global(img) {
+    width: 100%;
+    height: auto;
+    transition: transform 1s var(--ease);
+  }
+
+  .tile__veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(27, 21, 18, 0.42), transparent 55%);
+    opacity: 0;
+    transition: opacity 0.5s var(--ease);
+  }
+
+  .tile:hover :global(img), .tile:focus-visible :global(img) { transform: scale(1.045); }
+  .tile:hover .tile__veil, .tile:focus-visible .tile__veil { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tile:hover :global(img), .tile:focus-visible :global(img) { transform: none; }
+  }
+</style>

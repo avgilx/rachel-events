@@ -1,0 +1,157 @@
+---
+import Base from '../layouts/Base.astro';
+import { contact, practical, site } from '../content/site';
+
+const c = contact.channels;
+
+const wa = c.whatsapp.replace(/[^\d]/g, '');
+const prefill = contact.whatsappPrefill ? `?text=${encodeURIComponent(contact.whatsappPrefill)}` : '';
+// מספר בינלאומי לחיוג — עובד גם מחו״ל
+const telHref = wa ? `tel:+${wa}` : `tel:${c.phone.replace(/[^\d+]/g, '')}`;
+
+const channels = [
+  c.whatsapp && {
+    label: 'וואטסאפ',
+    value: 'שליחת הודעה',
+    href: `https://wa.me/${wa}${prefill}`,
+    external: true,
+  },
+  c.phone && { label: 'טלפון', value: c.phone, href: telHref },
+  c.email && { label: 'אימייל', value: c.email, href: `mailto:${c.email}` },
+  c.instagram && { label: 'Instagram', value: 'לצפייה בעמוד', href: c.instagram, external: true },
+  c.facebook && { label: 'Facebook', value: 'לצפייה בעמוד', href: c.facebook, external: true },
+].filter(Boolean) as { label: string; value: string; href: string; external?: boolean }[];
+
+const hasForm = Boolean(contact.formEndpoint);
+const hasAnything = channels.length > 0 || hasForm;
+const L = contact.formLabels;
+---
+
+<Base title={`${contact.title} | ${site.name}`} description={contact.intro}>
+  <header class="ch">
+    <div class="container">
+      <p class="eyebrow">דברו איתנו</p>
+      <h1>{contact.title}</h1>
+      <p class="lede ch__intro">{contact.intro}</p>
+    </div>
+  </header>
+
+  <section class="section section--tight">
+    <div class:list={['container', 'cnt', !hasAnything && 'cnt--quiet']}>
+      <div class="cnt__main">
+        {channels.length > 0 && (
+          <ul class="chan">
+            {channels.map((x) => (
+              <li class="chan__row">
+                <span class="chan__label">{x.label}</span>
+                <a class="chan__value" href={x.href} {...(x.external ? { target: '_blank', rel: 'noopener' } : {})}>
+                  {x.value}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {hasForm && (
+          <form class="cf" data-contact-form action={contact.formEndpoint} method="post" novalidate>
+            <p class="cf__row"><label for="f-name">{L.name}</label><input id="f-name" name="name" type="text" required autocomplete="name" /></p>
+            <p class="cf__row"><label for="f-phone">{L.phone}</label><input id="f-phone" name="phone" type="tel" required autocomplete="tel" /></p>
+            <p class="cf__row"><label for="f-occasion">{L.occasion}</label><input id="f-occasion" name="occasion" type="text" /></p>
+            <p class="cf__row"><label for="f-date">{L.date}</label><input id="f-date" name="date" type="text" /></p>
+            <p class="cf__row"><label for="f-message">{L.message}</label><textarea id="f-message" name="message" rows="5" /></p>
+            <p class="cf__trap" aria-hidden="true"><label for="f-company">אל תמלאו שדה זה</label><input id="f-company" name="company" type="text" tabindex="-1" autocomplete="off" /></p>
+            <button class="btn btn--solid" type="submit" data-cf-submit><span>{L.submit}</span></button>
+            <p class="cf__status" data-cf-status role="status" aria-live="polite" />
+            <template data-cf-sending>{L.sending}</template>
+            <template data-cf-success>{L.success}</template>
+            <template data-cf-error>{L.error}</template>
+          </form>
+        )}
+
+        {channels.length > 0 && (
+          <p class="cnt__who">
+            {contact.respondent ? `${contact.respondent} עונה לפניות. ` : ''}{contact.availabilityNote}
+          </p>
+        )}
+
+        {!hasAnything && <p class="cnt__pending">{contact.pendingNote}</p>}
+      </div>
+
+      <aside class="cnt__aside">
+        {practical.items.map((it) => (
+          <div class="cnt__fact">
+            <h2>{it.title}</h2>
+            <p>{it.text}</p>
+          </div>
+        ))}
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ch { padding-block: clamp(3rem, 8vw, 6rem) clamp(1.5rem, 3vw, 2.5rem); }
+  .ch__intro { margin-top: 1.25rem; }
+
+  .cnt { display: grid; gap: clamp(2.5rem, 6vw, 5rem); align-items: start; }
+  @media (min-width: 920px) { .cnt { grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); } }
+  @media (min-width: 920px) { .cnt--quiet { grid-template-columns: minmax(0, 760px); justify-content: start; } }
+  .cnt--quiet .cnt__main { order: 2; }
+
+  .chan { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--line); }
+  .chan__row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 1rem; padding-block: 1.3rem; border-bottom: 1px solid var(--line); }
+  .chan__label { font-size: var(--s--1); letter-spacing: 0.2em; color: var(--gold-ink); }
+  .chan__value { font-family: 'Bellefair', Georgia, serif; font-size: var(--s-2); text-decoration: none; }
+
+  .cnt__who { margin-top: 1.5rem; color: var(--ink-muted); font-size: var(--s--1); letter-spacing: 0.04em; }
+  .cnt__pending { color: var(--ink-muted); padding-block: 1.75rem; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+
+  .cnt__aside { display: grid; gap: 2rem; background: var(--champagne); padding: clamp(1.75rem, 4vw, 2.75rem); }
+  .cnt__fact { display: grid; gap: 0.6rem; }
+  .cnt__fact h2 { font-size: var(--s-1); }
+  .cnt__fact p { color: var(--ink-soft); font-weight: 300; font-size: var(--s-0); }
+
+  .cf { display: grid; gap: 1.2rem; margin-top: 2.5rem; max-width: 34rem; }
+  .cf__row { display: grid; gap: 0.45rem; margin: 0; }
+  .cf label { font-size: var(--s--1); letter-spacing: 0.14em; color: var(--ink-muted); }
+  .cf input, .cf textarea { font: inherit; color: var(--ink); background: var(--ivory); border: 1px solid var(--line); padding: 0.8rem 0.95rem; width: 100%; transition: border-color 0.25s var(--ease); }
+  .cf input:focus, .cf textarea:focus { border-color: var(--gold); }
+  .cf textarea { resize: vertical; }
+  .cf button { justify-self: start; }
+  .cf__trap { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); margin: -1px; }
+  .cf__status { margin: 0; font-size: var(--s--1); min-height: 1.5em; }
+  .cf__status[data-state='error'] { color: #a4452f; }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-contact-form]');
+  if (form) {
+    const status = form.querySelector<HTMLElement>('[data-cf-status]')!;
+    const submit = form.querySelector<HTMLButtonElement>('[data-cf-submit]')!;
+    const text = (n: string) => form.querySelector<HTMLTemplateElement>(`[data-cf-${n}]`)?.innerHTML.trim() ?? '';
+    const label = submit.innerHTML;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+      if ((form.elements.namedItem('company') as HTMLInputElement)?.value) return;
+
+      submit.disabled = true;
+      status.dataset.state = 'pending';
+      status.textContent = text('sending');
+      try {
+        const res = await fetch(form.action, { method: 'POST', headers: { Accept: 'application/json' }, body: new FormData(form) });
+        if (!res.ok) throw new Error(String(res.status));
+        form.reset();
+        status.dataset.state = 'success';
+        status.textContent = text('success');
+      } catch {
+        status.dataset.state = 'error';
+        status.textContent = text('error');
+      } finally {
+        submit.disabled = false;
+        submit.innerHTML = label;
+      }
+    });
+  }
+</script>

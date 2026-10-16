@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="מיצבים אמנותיים לאירועים">
+  <rect width="64" height="64" rx="12" fill="#1b1512"/>
+  <g fill="none" stroke="#cfae73" stroke-width="2.2" stroke-linecap="round">
+    <path d="M32 16c6 4 9 9 9 15s-3 11-9 15c-6-4-9-9-9-15s3-11 9-15z"/>
+    <path d="M18 31c5-4 10-5 14-4M46 31c-5-4-10-5-14-4"/>
+  </g>
+  <circle cx="32" cy="31" r="3" fill="#cfae73"/>
+</svg>
